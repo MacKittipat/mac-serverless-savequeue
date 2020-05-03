@@ -12,6 +12,71 @@
 # Happy Coding!
 
 service: mac-serverless-savequeue
+
+custom:
+  vars:
+    awsAccountId: 917599803305
+    awsRegion: ap-southeast-1
+    queueName: SaveQueue
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: prod
+  region: ${self:custom.vars.awsRegion}
+  environment:
+    AWS_ACCOUNT_ID: ${self:custom.vars.awsAccountId}
+    QUEUE_NAME: ${self:custom.vars.queueName}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+      Resource: 'arn:aws:sqs:${self:provider.region}:*:${self:custom.vars.queueName}'
+
+functions:
+
+  saveQueue:
+    handler: handler.saveQueue
+    events:
+      - http:
+          method: post
+          path: saveQueue
+
+  saveDynamo:
+    handler: handler.saveDynamo
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - ${self:custom.vars.queueName}
+              - Arn
+
+resources:
+  Resources:
+
+    SaveQueue:
+      Type: 'AWS::SQS::Queue'
+      Properties:
+        QueueName: ${self:custom.vars.queueName}
+
+#    MessageTable:
+#      Type: 'AWS::DynamoDB::Table'
+#      Properties:
+#        TableName: Message
+#        AttributeDefinitions:
+#            - AttributeName: username
+#              AttributeType: S
+#            - AttributeName: createdtime
+#              AttributeType: N
+#        KeySchema:
+#          - AttributeName: username
+#            KeyType: HASH
+#          - AttributeName: createdtime
+#            KeyType: range
+#        ProvisionedThroughput:
+#          ReadCapacityUnits: 1
+#          WriteCapacityUnits: 1
+
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -20,9 +85,6 @@ service: mac-serverless-savequeue
 # Check out our docs for more details
 # frameworkVersion: "=X.X.X"
 
-provider:
-  name: aws
-  runtime: nodejs12.x
 
 # you can overwrite defaults here
 #  stage: dev
@@ -57,9 +119,6 @@ provider:
 #    - exclude-me.js
 #    - exclude-me-dir/**
 
-functions:
-  hello:
-    handler: handler.hello
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

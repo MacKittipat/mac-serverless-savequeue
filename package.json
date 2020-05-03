@@ -1,0 +1,10 @@
+{
+  "name": "mac-serverless-savequeue",
+  "version": "1.0.0",
+  "description": "A Lambda function",
+  "main": "handler.js",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "2.665.0"
+  }
+}
