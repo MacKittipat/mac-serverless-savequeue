@@ -1,15 +1,18 @@
 const aws = require('aws-sdk');
 
 const AWS_ACCOUNT_ID = process.env.AWS_ACCOUNT_ID;
-const SQS_URL = 'https://sqs.ap-southeast-1.amazonaws.com/' + AWS_ACCOUNT_ID + '/SaveQueue';
+const REGION = process.env.REGION;
+const QUEUE_NAME = process.env.QUEUE_NAME;
+const TABLE_NAME = process.env.TABLE_NAME;
+const SQS_URL = 'https://sqs.ap-southeast-1.amazonaws.com/' + AWS_ACCOUNT_ID + '/' + QUEUE_NAME;
 
-const sqs = new aws.SQS({region : 'ap-southeast-1'});
+const sqs = new aws.SQS({region : REGION});
 
 exports.saveQueue = async (event) => {
     var payload = event.body;
     console.log('Saving message to SQS. params=' + JSON.stringify(payload));
     var params = {
-        MessageBody: JSON.stringify(payload),
+        MessageBody: payload,
         QueueUrl: SQS_URL
     };
     const sqsResponse = await sqs.sendMessage(params).promise();
@@ -24,15 +27,21 @@ exports.saveQueue = async (event) => {
 exports.saveDynamo = async (event) => {
     console.log('Saving message to DynamoDB', JSON.stringify(event));
 
-    // var message = JSON.parse(event.body);
-    // var docClient = new AWS.DynamoDB.DocumentClient();
-    //
-    // docClient.put(params, function(err, data) {
-    //     if (err) {
-    //         console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-    //     } else {
-    //         console.log("Added item:", JSON.stringify(data, null, 2));
-    //     }
-    // });
+    var docClient = new aws.DynamoDB.DocumentClient({region: REGION});
+    for(var i=0; i < event.Records.length; i++) {
+        var record = event.Records[i];
+        var payload = JSON.parse(record.body);
 
+        var params = {
+            TableName: TABLE_NAME,
+            Item: {
+                "username": payload.username,
+                "createdTime": new Date().getTime(),
+                "message": payload.message
+            }
+        };
+        console.log('Putting message to DynamoDB, request=', JSON.stringify(params));
+        var dynamoResponse = await docClient.put(params).promise();
+        console.log('Putted message to DynamoDb completed. response=', dynamoResponse);
+    }
 };
