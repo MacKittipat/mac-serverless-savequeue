@@ -15,7 +15,7 @@ service: mac-serverless-savequeue
 
 custom:
   vars:
-    awsAccountId: 917599803305
+    awsAccountId: !Ref AWS::AccountId
     awsRegion: ap-southeast-1
     queueName: SaveQueue
     tableName: RequestMessage
@@ -83,6 +83,9 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+  Outputs:
+    AccountId:
+      Value: !Ref AWS::AccountId
 
 # app and org for use with dashboard.serverless.com
 #app: your-app-name

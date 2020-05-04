@@ -5,6 +5,7 @@
   "main": "handler.js",
   "scripts": {},
   "dependencies": {
-    "aws-sdk": "2.665.0"
+    "aws-sdk": "2.665.0",
+    "serverless-stack-output": "0.2.3"
   }
 }
